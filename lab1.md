@@ -71,3 +71,26 @@
 	- Exercise5:
 		- 阅读boot.asm文件，找到第一条可能使程序崩溃的指令(如果修改了boot/Makefrag文件的话) answer:lgdt gdtdesc
 		- lgdt gdtdesc会将虚拟地址映射到物理地址
+	- objdump -f obj/kern/kernel
+		- 查看程序入口点e_entry
+	- main.c的作用
+		- 将内核的每个节从磁盘读入内存，然后将CS:IP指向程序入口点
+	- Exercise6:
+		- 重新开始运行make qemu-gdb,在boot loader前使用x/8x 0x100000查看地址0x100000内容，然后在boot loader后查看地址0x100000内容，观察有啥不同
+		- 在0x7c00处设置断点，使用x/8x 0x100000查看，发现这八个字节都是0
+		- 在0x7d6b处设置断点，使用x/8x 0x100000查看，发现内容已经被修改
+### Part3: The kernel ###		
+- Using virtual memory to work around position dependence
+	- kern/kernel.ld: 查看物理地址和虚拟地址
+	- kern/entrypgdir.c: 初始化页目录和页表
+	- kern/entry.S: 设置CR0_PG标志，一旦设置，那么之后的所有地址都是虚拟地址，虚拟地址需要转换为物理地址。
+	- 物理地址的0x0-0x400000对应着虚拟地址0xf0000000-0xf0400000和0x0-0x400000
+- Exercise7:
+	- 使用gdb在`movl %eax, %cr0`处设置断点，观察地址0x00100000和0xf0100000,然后单步执行，观察两地址变化
+	- 在obj/kern/kernel.asm中找到`movl %eax, %cr0`的地址为0xf0100025，但此时还没有建立虚拟地址与物理地址映射，所以`movl %eax, %cr0`的物理地址为0x00100025，在此处下断点
+	- 可以发现执行`movl %eax, %cr0`前0xf0100000内容都为0，执行后0xf0100000和0x00100000内容一样
+	- 映射建立后的第一条指令是什么？干嘛用的？
+		- answer：`mov $0xf010002f, %eax   jmp *%eax`，用来将CS:IP设置到虚拟地址
+- Formatted Printing to the console
+	- 阅读文件kern/printf.c,kern/printfmt.c,kern/console.c，确定他们的关系
+	- Exercise8:我们省略了一小段代码-使用“％o”形式的模式打印八进制数字所必需的代码。 查找并填写此代码片段。
