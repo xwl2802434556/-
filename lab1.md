@@ -93,4 +93,33 @@
 		- answer：`mov $0xf010002f, %eax   jmp *%eax`，用来将CS:IP设置到虚拟地址
 - Formatted Printing to the console
 	- 阅读文件kern/printf.c,kern/printfmt.c,kern/console.c，确定他们的关系
-	- Exercise8:我们省略了一小段代码-使用“％o”形式的模式打印八进制数字所必需的代码。 查找并填写此代码片段。
+	- Exercise8:我们省略了一小段代码-使用“％o”形式的模式打印八进制数字所必需的代码。 查找并填写此代码片段。answer:在printfmt.c的207行，照着上面修改就行。
+	- q1:解释printf.c,console.c之间的接口，console.c提供了什么功能，如何被printf.c使用？
+		- a1:printf.c使用了console.c提供的void cputchar(int);函数用来向控制台输出一个字符
+	- q2:解释console.c195行代码
+		- a2:当显示字符超过CRT一屏显示的字符时，将屏幕上第二行到最后一行上移一行，并将最后一行设置为黑色空格，然后将光标移动到最后一行开始位置。
+	- q3:看完lecture2后，单步跟踪下面代码，回答问题
+		- a3:
+	- q4:
+		- a4:
+- The Stack
+	- Exercise9:确定内核初始化栈的代码位置，以及栈在内存的位置，内核如何为栈分配空间，在何处初始化栈指针指向？
+		- 查看kernel.asm代码，在48-58行初始化栈，将栈放在0xf0110000中
+	- 刚开始时，栈指针%esp指向栈的最底位置，栈中其他位置都是空闲的。入栈包含两个操作，先将%esp-4,然后将值放入%esp;出栈包含两个操作，先读出%esp中的值，然后将%esp+4。%esp在32位机中总是4字节对齐
+	- 基指针%ebp，当进入一个C函数时，有两个操作：先push %ebp,然后mov %esp,%ebp。
+	- Exercise10:为了熟悉C函数调用过程，在kernel.asm中找到test_backtrace处设置断点，观察每一步指向发生了什么。
+	- Exercise11:实现backtrace功能
+		```
+		cprintf("Stack backtrace:\n");
+		int* ebp = (int*)read_ebp();
+		while(ebp){
+			cprintf("  ebp %08x  ", ebp);
+			cprintf("eip %08x  ", *(ebp + 1));
+			cprintf("args %08x ", *(ebp + 2));
+			cprintf("%08x ", *(ebp + 3));
+			cprintf("%08x ", *(ebp + 4));
+			cprintf("%08x ", *(ebp + 5));
+			cprintf("%08x\n", *(ebp + 6));
+			ebp = (int*)(*ebp);
+		}
+		```
